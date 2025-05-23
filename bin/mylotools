@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+import argparse
+import sys
+from pathlib import Path
+import os
+
+# Add the parent directory to the path if running directly
+if __name__ == '__main__':
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.insert(0, repo_root)
+
+import mylotools.strain_viz as strain_viz
+import mylotools.plot as myloplot
+import mylotools.extract_contigs as extract_contigs
+from mylotools.version import __version__
+
+def strain_viz_command(args):
+    strain_viz.main(args)
+
+def myloplot_command(args):
+    myloplot.main(args)
+
+def extract_command(args):
+    extract_contigs.main(args)
+
+def populate_extract_options(parser):
+    parser.add_argument('--min-contig-length', type=int, default=300000, help='Minimum contig length to extract (default: 300000)')
+    parser.add_argument('--fasta', type=str, default='assembly_primary.fa', help='Myloasm fasta file (default: assembly_primary.fa)')
+    parser.add_argument('--output-folder', type=str, required=True, help='Output directory')
+
+def populate_strain_viz_options(parser):
+    def_overlaps_file = "0-cleaning_and_unitigs/overlaps.txt.gz"
+    def_gfa = "final_contig_graph.gfa"
+    parser.add_argument('--overlaps', help=f"Path to the overlaps file (default: {def_overlaps_file})", default = def_overlaps_file)
+    parser.add_argument('--gfa', help=f"Path to the GFA file containing contig information (default: {def_gfa})", default = def_gfa)
+    parser.add_argument('contigs', help='List of contig IDs to include', nargs='+')
+    parser.add_argument('--max-reads', type=int, default=500, 
+                        help='Maximum number of reads to display per contig (default: 20)')
+    parser.add_argument('--output', help='Output file for the visualization PNG, PDF, SVG, etc. (default: do not save; output to terminal)')
+    
+    
+def populate_plot_options(parser):
+    parser.add_argument("contig_ids", help="ID of the contig to analyze", nargs='+')
+    parser.add_argument("--fasta", default="assembly_primary.fa", 
+                        help="Path to the assembly FASTA file (default: assembly_primary.fa)")
+    parser.add_argument("--gfa", default="final_contig_graph.gfa", 
+                        help="Path to the GFA file (default: final_contig_graph.gfa)")
+    parser.add_argument("-w", "--window-size", type=int, default=1000,
+                        help="Sliding window size in base pairs for GC content (default: 1000)")
+    parser.add_argument("-s", "--step-size", type=int, default=None,
+                        help="Step size for the sliding window (default: window_size/2)")
+    parser.add_argument("-o", "--output", default=None,
+                        help="Output HTML file name (default: contig_id_analysis.html)")
+    parser.add_argument("--marker-size", type=int, default=8,
+                        help="Size of marker points in the coverage plot (default: 8)")
+    parser.add_argument("--overlap-marker-size", type=int, default=12,
+                        help="Size of marker points in the overlap plot (default: 12)")
+
+    
+def main():
+    # Create the top-level parser
+    parser = argparse.ArgumentParser(
+        description='mylotools - utility tools for myloasm',
+        prog='mylotools',
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=__version__,
+    )
+
+    subparsers = parser.add_subparsers(dest='command', required=True)
+
+    plot_parser = subparsers.add_parser(
+        'plot',
+        help="Generate a plot of various statistics for one of myloasm's output contigs"
+    )
+    
+    strain_viz_parser = subparsers.add_parser(
+        'strain-viz',
+        help='Visualize overlaps between and within two or more similar contigs'
+    )
+
+    extract_contigs_parser = subparsers.add_parser(
+        'extract-contigs',
+        help='Extract contigs > X bp into a folder as its own fasta'
+    )
+
+    populate_strain_viz_options(strain_viz_parser)
+    populate_plot_options(plot_parser)
+    populate_extract_options(extract_contigs_parser)
+    strain_viz_parser.set_defaults(func=strain_viz_command)
+    plot_parser.set_defaults(func=myloplot_command)
+    extract_contigs_parser.set_defaults(func=extract_command)
+
+    # Parse arguments and call the appropriate function
+    args = parser.parse_args()
+    args.func(args)
+    
+if __name__ == '__main__':
+    main()
