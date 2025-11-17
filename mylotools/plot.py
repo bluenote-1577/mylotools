@@ -105,6 +105,8 @@ def parse_gfa_for_coverage(contig_id, gfa_file):
             
             # Extract the read ID from column 5
             read_id = parts[4] if len(parts) > 4 else "unknown_read"
+            if len(read_id.split()) > 1:
+                read_id = read_id.split()[0] + ' ' + read_id.split()[-1]
                 
             # Extract DP values and additional metrics
             dp_part = parts[-1]
@@ -392,7 +394,11 @@ def main(args):
         # Set default output file name if not specified
     for contig_id in args.contig_ids:
         if args.output is None:
-            args.output = f"{contig_id}_analysis.html"
+            output = f"{contig_id}_analysis.html"
+        else:
+            os.makedirs(args.output, exist_ok=True)
+            output = f"{args.output}/{contig_id}_analysis.html"
+            
         
         # Extract the contig sequence
         contig_fasta = extract_contig(contig_id, args.fasta)
@@ -412,6 +418,6 @@ def main(args):
         coverage_data = parse_gfa_for_coverage(contig_id, args.gfa)
         
         # Create the interactive plot
-        create_interactive_plot(contig_id, gc_data, coverage_data, args.output)
-    
-        print(f"Analysis complete. Open {args.output} in a web browser to view the interactive plot.")
+        create_interactive_plot(contig_id, gc_data, coverage_data, output)
+ 
+        print(f"Analysis complete. Open {output} in a web browser to view the interactive plot.")

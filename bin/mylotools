@@ -12,6 +12,7 @@ if __name__ == '__main__':
 import mylotools.strain_viz as strain_viz
 import mylotools.plot as myloplot
 import mylotools.extract_contigs as extract_contigs
+import mylotools.report as report
 from mylotools.version import __version__
 
 def strain_viz_command(args):
@@ -23,10 +24,29 @@ def myloplot_command(args):
 def extract_command(args):
     extract_contigs.main(args)
 
+def report_command(args):
+    report.main(args)
+
 def populate_extract_options(parser):
     parser.add_argument('--min-contig-length', type=int, default=300000, help='Minimum contig length to extract (default: 300000)')
     parser.add_argument('--fasta', type=str, default='assembly_primary.fa', help='Myloasm fasta file (default: assembly_primary.fa)')
     parser.add_argument('--output-folder', type=str, required=True, help='Output directory')
+
+def populate_report_options(parser):
+    parser.add_argument('--fasta', type=str, default='assembly_primary.fa', 
+                        help='Myloasm fasta file (default: assembly_primary.fa)')
+    parser.add_argument('--gfa', type=str, default='final_contig_graph.gfa',
+                        help='Path to the GFA file (default: final_contig_graph.gfa)')
+    parser.add_argument('--min-length', type=int, default=300000,
+                        help='Minimum contig length to include (default: 300000)')
+    parser.add_argument('--window-size', type=int, default=1000,
+                        help='Window size for GC content calculation (default: 1000)')
+    parser.add_argument('--x-axis', type=str, choices=['gc', 'length'], default='gc',
+                        help='X-axis for summary plot: gc (GC content) or length (contig length) (default: gc)')
+    parser.add_argument('--workers', type=int, default=5,
+                        help='Number of parallel workers for plot generation (default: 5)')
+    parser.add_argument('--output', type=str, required=True,
+                        help='Output directory for report files')
 
 def populate_strain_viz_options(parser):
     def_overlaps_file = "0-cleaning_and_unitigs/overlaps.txt.gz"
@@ -87,12 +107,19 @@ def main():
         help='Extract contigs > X bp into a folder as its own fasta'
     )
 
+    report_parser = subparsers.add_parser(
+        'report',
+        help='Generate comprehensive report with plots for all long contigs'
+    )
+
     populate_strain_viz_options(strain_viz_parser)
     populate_plot_options(plot_parser)
     populate_extract_options(extract_contigs_parser)
+    populate_report_options(report_parser)
     strain_viz_parser.set_defaults(func=strain_viz_command)
     plot_parser.set_defaults(func=myloplot_command)
     extract_contigs_parser.set_defaults(func=extract_command)
+    report_parser.set_defaults(func=report_command)
 
     # Parse arguments and call the appropriate function
     args = parser.parse_args()
