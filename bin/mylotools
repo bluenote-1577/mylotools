@@ -14,6 +14,7 @@ import mylotools.plot as myloplot
 import mylotools.extract_contigs as extract_contigs
 import mylotools.report as report
 import mylotools.sanitize_headers as sanitize_headers
+import mylotools.annotate_gfa as annotate_gfa
 from mylotools.version import __version__
 
 def strain_viz_command(args):
@@ -30,6 +31,9 @@ def report_command(args):
 
 def sanitize_headers_command(args):
     sanitize_headers.main(args)
+
+def annotate_gfa_command(args):
+    annotate_gfa.main(args)
 
 def populate_extract_options(parser):
     parser.add_argument('--min-contig-length', type=int, default=300000, help='Minimum contig length to extract (default: 300000)')
@@ -51,6 +55,17 @@ def populate_report_options(parser):
                         help='Number of parallel workers for plot generation (default: 5)')
     parser.add_argument('--output', type=str, required=True,
                         help='Output directory for report files')
+
+def populate_annotate_gfa_options(parser):
+    parser.add_argument('--gfa', type=str, default='final_contig_graph.gfa',
+                        help='Path to the myloasm GFA file to annotate (default: final_contig_graph.gfa)')
+    parser.add_argument('--fasta', type=str, default='assembly_primary.fa',
+                        help='Final (polished, filtered) myloasm assembly fasta (default: assembly_primary.fa)')
+    parser.add_argument('--output', type=str, required=True,
+                        help='Output path for the annotated GFA file')
+    parser.add_argument('--keep-read-info', action='store_true',
+                        help="Keep the per-read alignment ('a') lines from the original GFA "
+                             "(default: dropped, since their coordinates refer to the pre-polish sequence)")
 
 def populate_sanitize_headers_options(parser):
     parser.add_argument('--fasta', type=str, required=True,
@@ -126,19 +141,25 @@ def main():
         'extract-contigs',
         help='Extract contigs > X bp into a folder as its own fasta'
     )
-    
 
-  
+    annotate_gfa_parser = subparsers.add_parser(
+        'annotate-gfa',
+        help="Annotate final_contig_graph.gfa with sequence bases from the final assembly"
+    )
+
+
     populate_strain_viz_options(strain_viz_parser)
     populate_plot_options(plot_parser)
     populate_extract_options(extract_contigs_parser)
     populate_report_options(report_parser)
     populate_sanitize_headers_options(sanitize_headers_parser)
+    populate_annotate_gfa_options(annotate_gfa_parser)
     strain_viz_parser.set_defaults(func=strain_viz_command)
     plot_parser.set_defaults(func=myloplot_command)
     extract_contigs_parser.set_defaults(func=extract_command)
     report_parser.set_defaults(func=report_command)
     sanitize_headers_parser.set_defaults(func=sanitize_headers_command)
+    annotate_gfa_parser.set_defaults(func=annotate_gfa_command)
 
     # Parse arguments and call the appropriate function
     args = parser.parse_args()
