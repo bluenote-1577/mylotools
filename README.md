@@ -31,4 +31,4 @@ mylotools annotate-gfa --gfa final_contig_graph.gfa --fasta assembly_primary.fa 
 - `L` (link) lines are left untouched, so the graph structure stays valid regardless of which segments were filtered.
 
 - By default, per-read alignment (`a`) lines are dropped from the output, since their coordinates refer to the pre-polish sequence and no longer line up once bases are swapped in. Pass `--keep-read-info` to retain them as-is.
->>>>>>> v2.1.0
+
