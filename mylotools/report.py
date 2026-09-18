@@ -347,7 +347,16 @@ def create_summary_report(contig_info, plot_paths, output_file, x_axis='gc'):
         x_axis (str): 'gc' for GC content or 'length' for contig length on x-axis
     """
     print(f"\nCreating summary report with x-axis={x_axis}...")
-    
+
+    # Some contigs may have failed plot generation (e.g. a plotting error) and
+    # therefore have no entry in plot_paths. Exclude them from the report
+    # instead of crashing.
+    missing_plots = [cid for cid in contig_info if cid not in plot_paths]
+    if missing_plots:
+        print(f"  Warning: {len(missing_plots)} contig(s) have no plot and will be "
+              f"excluded from the summary report: {', '.join(missing_plots)}")
+        contig_info = {cid: info for cid, info in contig_info.items() if cid in plot_paths}
+
     # Separate circular and non-circular contigs
     circular_data = {'ids': [], 'lengths': [], 'gc': [], 'cov': [], 'links': [], 'sizes': [], 'hover': [], 'metadata': []}
     noncircular_data = {'ids': [], 'lengths': [], 'gc': [], 'cov': [], 'links': [], 'sizes': [], 'hover': [], 'metadata': []}

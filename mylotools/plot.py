@@ -186,18 +186,19 @@ def create_interactive_plot(contig_id, gc_data, coverage_data, output_file):
         row=1, col=1
     )
     
-    # Add a horizontal line for mean GC content
-    mean_gc = sum(gc_contents) / len(gc_contents)
-    fig.add_trace(
-        go.Scatter(
-            x=[min(positions_gc), max(positions_gc)],
-            y=[mean_gc, mean_gc],
-            mode='lines',
-            name=f'Mean GC: {mean_gc:.2f}%',
-            line=dict(color='red', width=1, dash='dash')
-        ),
-        row=1, col=1
-    )
+    # Add a horizontal line for mean GC content (skip if contig shorter than one window)
+    if gc_contents:
+        mean_gc = sum(gc_contents) / len(gc_contents)
+        fig.add_trace(
+            go.Scatter(
+                x=[min(positions_gc), max(positions_gc)],
+                y=[mean_gc, mean_gc],
+                mode='lines',
+                name=f'Mean GC: {mean_gc:.2f}%',
+                line=dict(color='red', width=1, dash='dash')
+            ),
+            row=1, col=1
+        )
 
     cumulative_gc_skew = []
     last = None
